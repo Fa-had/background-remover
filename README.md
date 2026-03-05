@@ -44,7 +44,7 @@ A modern web application for automatically removing image backgrounds with a sim
 1. Clone the repository:
 
 ```bash
-git clone <www.github.com/Fa-Had/background-remover>
+git clone https://github.com/Fa-had/background-remover.git
 cd background-remover
 ```
 
