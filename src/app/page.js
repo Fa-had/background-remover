@@ -1,101 +1,124 @@
-import Image from "next/image";
+'use client'
+import { useState } from 'react'
+import axios from 'axios'
+import Header from '@/components/Header'
+import Image from 'next/image'
+import backgroundImage from '@/public/background_remove_icon.png'
+import upload_icon from '@/public/uploadIcon.png'
+import Footer from '@/components/Footer'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [processedImage, setProcessedImage] = useState(null)
+  const [loading, setLoading] = useState(false)
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+  const handleFileChange = (event) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setSelectedFile(event.target.files[0])
+    }
+  }
+
+  const handleUpload = async (e) => {
+    e.preventDefault()
+    if (!selectedFile) return
+    setLoading(true)
+    const formData = new FormData()
+    formData.append('file', selectedFile)
+    const url = process.env.NEXT_PUBLIC_HOST
+    const api = process.env.NEXT_PUBLIC_API_KEY
+    try {
+      const response = await axios.post(`${url}remove-background/`, formData, {
+        headers: {
+          Authorization: api, // Use a valid API key from the list
+        },
+      })
+      const filename = response.data.filename
+      setProcessedImage(`${url}download/${filename}`)
+    } catch (error) {
+      console.error('Error removing background:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <Header />
+      <main className='flex w-full h-auto flex-col md:flex-row items-center px-4 py-16 justify-center bg-gray-100'>
+        <div className='relative w-1/2 h-auto flex flex-col items-center justify-center'>
+          <Image
+            src={backgroundImage}
+            className='rounded-full'
+            alt='Background remover'
+            width={200}
+            height={200}
+          />
+          <div className='absolute top-0 left-0 w-full h-full flex items-center justify-center' />
+          <h1 className='text-4xl font-bold text-gray-800 mt-6'>
+            Remove Image Background
+          </h1>
+          <p className='text-lg text-gray-600 mt-2'>
+            100% Automatically and{' '}
+            <span className='text-yellow-500 font-bold'>Free</span>
+          </p>
+        </div>
+
+        <div className='mt-8 p-6 bg-white shadow-lg rounded-lg flex flex-col space-y-5 items-center'>
+          <label htmlFor='image'>
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+              src={
+                !selectedFile ? upload_icon : URL.createObjectURL(selectedFile)
+              }
+              width={!selectedFile ? 150 : 500}
+              height={!selectedFile ? 150 : 500}
+              alt='thumbnail'
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </label>
+          <input
+            onChange={handleFileChange}
+            type='file'
+            id='image'
+            accept='image/*'
+            hidden
+            required
+          />
+
+          <button
+            onClick={handleUpload}
+            className='bg-blue-500 text-white px-4 py-2 shadow-xl rounded-md disabled:bg-gray-400'
+            disabled={!selectedFile || loading}
           >
-            Read our docs
-          </a>
+            {loading ? 'Processing...' : 'Remove Background'}
+          </button>
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+      {processedImage && (
+        <div className='flex flex-col items-center mt-12'>
+          <h2 className='text-lg font-semibold'>Processed Image:</h2>
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src={processedImage}
+            width={500}
+            height={500}
+            alt='Processed'
+            className='w-48 h-48 object-cover rounded-lg mb-2'
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+          <a
+            href={processedImage}
+            onClick={() => {
+              setTimeout(() => {
+                window.location.reload()
+              }, 2000)
+            }}
+            download
+            className='bg-green-500 text-white px-4 py-2 rounded-md'
+          >
+            Download
+          </a>
+        </div>
+      )}
+      <div className='mt-8 text-center'>
+        <Footer />
+      </div>
+    </>
+  )
 }
